@@ -11,9 +11,9 @@
 				"base": "mobbucket:item/mob_bucket",
 				"model": {
 					"type": "mobbucket:captured_mob",
-					"scale": 0.5,
-					"y_offset": 0.25,
-					"rotation": 180.0
+					"scale": 0.66,
+					"y_offset": 0.33,
+					"rotation": 0.0
 				}
 			}
 		]

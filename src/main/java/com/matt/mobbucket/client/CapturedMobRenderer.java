@@ -108,6 +108,16 @@ public class CapturedMobRenderer implements SpecialModelRenderer<CompoundTag> {
 			Optional<Entity> created = EntityType.by(input)
 					.flatMap(type -> EntityType.create(type, input, level, EntitySpawnReason.BUCKET));
 			if (created.isPresent() && created.get() instanceof LivingEntity living) {
+				// Normalise facing so every mob looks forward regardless of the
+				// yaw it was captured at. This must happen before the render state
+				// is built, since the state bakes in the entity's rotation.
+				living.setYRot(0.0F);
+				living.setXRot(0.0F);
+				living.setYHeadRot(0.0F);
+				living.setYBodyRot(0.0F);
+				living.yHeadRotO = 0.0F;
+				living.yBodyRotO = 0.0F;
+				living.setOldPosAndRot();
 				living.setId(FAKE_ID.getAndDecrement());
 				CACHE.put(key, living);
 				return living;
@@ -141,10 +151,17 @@ public class CapturedMobRenderer implements SpecialModelRenderer<CompoundTag> {
 				living.xRot = 0.0F;
 			}
 
+			// Auto-fit: scale every mob to the same on-screen height ("scale" is
+			// the target height) and center it vertically, so a chicken and a cow
+			// frame the same way instead of one being a blob and one being legs.
+			float bbHeight = Math.max(state.boundingBoxHeight, 0.1F);
+			float fit = scale / bbHeight;
+
 			pose.pushPose();
 			pose.translate(0.5F, yOffset, 0.5F);
-			pose.scale(scale, scale, scale);
 			pose.mulPose(new Matrix4f().rotationY((float) Math.toRadians(rotationDegrees)));
+			pose.scale(fit, fit, fit);
+			pose.translate(0.0F, -bbHeight * 0.5F, 0.0F);
 			dispatcher.submit(state, CAMERA, 0.0, 0.0, 0.0, pose, collector);
 			pose.popPose();
 		} catch (Exception ignored) {
@@ -162,9 +179,9 @@ public class CapturedMobRenderer implements SpecialModelRenderer<CompoundTag> {
 			implements SpecialModelRenderer.Unbaked<CompoundTag> {
 
 		public static final MapCodec<Unbaked> MAP_CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
-				Codec.FLOAT.optionalFieldOf("scale", 0.5F).forGetter(Unbaked::scale),
-				Codec.FLOAT.optionalFieldOf("y_offset", 0.25F).forGetter(Unbaked::yOffset),
-				Codec.FLOAT.optionalFieldOf("rotation", 180.0F).forGetter(Unbaked::rotationDegrees)
+				Codec.FLOAT.optionalFieldOf("scale", 0.22F).forGetter(Unbaked::scale),
+				Codec.FLOAT.optionalFieldOf("y_offset", 0.3F).forGetter(Unbaked::yOffset),
+				Codec.FLOAT.optionalFieldOf("rotation", 0.0F).forGetter(Unbaked::rotationDegrees)
 		).apply(i, Unbaked::new));
 
 		@Override
