@@ -12,11 +12,13 @@ you name it — with no mixins at all.
 
 ## What it does
 
-- **Scoop:** right-click any non-player living entity with an empty **Mob Bucket** to
-  capture it. The creature's *entire* state is saved — health, age, variant, custom name,
+- **Scoop:** **sneak + right-click** any non-player living entity with an empty **Mob Bucket**
+  to capture it. The creature's *entire* state is saved — health, age, variant, custom name,
   tamed owner, inventory, everything — so you get the exact same mob back, not a fresh one.
-- **Release:** right-click a block with a full bucket to drop the creature onto the block
-  face you clicked. The bucket empties and is ready to reuse.
+- **Release:** **sneak + right-click** a block with a full bucket to drop the creature onto
+  the block face you clicked. The bucket empties and is ready to reuse.
+- The sneak requirement means a normal right-click still works as usual while you hold the
+  bucket — trading with villagers, mounting horses, opening chests, and so on.
 - The captured creature's name shows in the item tooltip.
 - Found in the **Tools & Utilities** creative tab.
 

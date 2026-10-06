@@ -61,6 +61,12 @@ public class MobBucketItem extends Item {
 	public InteractionResult interactLivingEntity(ItemStack stack, Player player, LivingEntity entity, InteractionHand hand) {
 		Level level = entity.level();
 
+		// Require sneaking so a normal right-click still trades with villagers,
+		// mounts horses, etc. while holding the bucket.
+		if (!player.isSecondaryUseActive()) {
+			return InteractionResult.PASS;
+		}
+
 		// Only non-players can be scooped, and a full bucket is busy already.
 		if (entity instanceof Player || isFilled(stack) || !entity.isAlive()) {
 			return InteractionResult.PASS;
@@ -95,6 +101,12 @@ public class MobBucketItem extends Item {
 	public InteractionResult useOn(UseOnContext context) {
 		ItemStack stack = context.getItemInHand();
 		if (!isFilled(stack)) {
+			return InteractionResult.PASS;
+		}
+
+		// Require sneaking so a normal right-click can still open chests, doors, etc.
+		Player player = context.getPlayer();
+		if (player == null || !player.isSecondaryUseActive()) {
 			return InteractionResult.PASS;
 		}
 
@@ -148,6 +160,8 @@ public class MobBucketItem extends Item {
 			String name = root.getStringOr(NAME_TAG, "Unknown");
 			adder.accept(Component.translatable("item.mobbucket.mob_bucket.contains", name)
 					.withStyle(ChatFormatting.GRAY));
+			adder.accept(Component.translatable("item.mobbucket.mob_bucket.release_hint")
+					.withStyle(ChatFormatting.DARK_GRAY));
 		} else {
 			adder.accept(Component.translatable("item.mobbucket.mob_bucket.empty_hint")
 					.withStyle(ChatFormatting.DARK_GRAY));
