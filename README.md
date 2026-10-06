@@ -25,6 +25,15 @@ you name it — with no mixins at all.
 It captures any `LivingEntity` (every mob, plus armor stands). It does **not** catch
 non-living entities such as boats, minecarts, item frames or dropped items.
 
+## Crafting
+
+Shapeless: **1 bucket + 1 ender pearl → 1 Mob Bucket** (reusable forever — one bucket is
+all you ever need). You can also get it from the Tools & Utilities creative tab or with
+`/give @s mobbucket:mob_bucket`.
+
+To change the recipe, edit
+`src/main/resources/data/mobbucket/recipe/mob_bucket.json` and rebuild.
+
 ## Requirements
 
 | Component       | Version        |

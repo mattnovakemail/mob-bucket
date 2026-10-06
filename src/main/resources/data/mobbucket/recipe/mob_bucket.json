@@ -1,0 +1,12 @@
+{
+	"type": "minecraft:crafting_shapeless",
+	"category": "misc",
+	"group": "mob_bucket",
+	"ingredients": [
+		"minecraft:bucket",
+		"minecraft:ender_pearl"
+	],
+	"result": {
+		"id": "mobbucket:mob_bucket"
+	}
+}
