@@ -1,0 +1,25 @@
+{
+	"schemaVersion": 1,
+	"id": "mobbucket",
+	"version": "${version}",
+	"name": "Mob In A Bucket",
+	"description": "Scoop up (almost) any mob - passive or hostile - into a bucket and release it wherever you like.",
+	"authors": [
+		"matthewnovak"
+	],
+	"contact": {},
+	"license": "MIT",
+	"icon": "assets/mobbucket/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.matt.mobbucket.MobBucketMod"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

@@ -1,0 +1,5 @@
+{
+	"item.mobbucket.mob_bucket": "Mob Bucket",
+	"item.mobbucket.mob_bucket.contains": "Contains: %s",
+	"item.mobbucket.mob_bucket.empty_hint": "Right-click a creature to scoop it up"
+}
