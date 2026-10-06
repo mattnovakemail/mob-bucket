@@ -33,20 +33,29 @@ import org.joml.Vector3fc;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
  * Renders the captured mob as a small live model peeking out of the bucket.
  *
- * <p>The transform (scale / vertical offset / rotation) is read from the item
- * model JSON so placement can be tuned without recompiling.
+ * <p>The per-stack argument is the stored entity's NBT ({@link CompoundTag}),
+ * NOT the entity itself: the game uses the argument as a model-identity key and
+ * hashes it, and a client-only entity with no assigned id throws from
+ * {@code Entity#hashCode}. The entity is reconstructed (and cached) from that
+ * tag at submit time, and given a fake negative id so nothing in the render
+ * path trips on {@code getId()} either.
+ *
+ * <p>Placement (scale / vertical offset / rotation) is read from the item model
+ * JSON so it can be tuned without recompiling.
  */
-public class CapturedMobRenderer implements SpecialModelRenderer<LivingEntity> {
+public class CapturedMobRenderer implements SpecialModelRenderer<CompoundTag> {
 	private static final String ENTITY_TAG = "CapturedEntity";
 	private static final CameraRenderState CAMERA = new CameraRenderState();
+	private static final AtomicInteger FAKE_ID = new AtomicInteger(-100_000);
 
-	// Bounded cache of reconstructed client-side entities, keyed by their NBT,
-	// so we don't rebuild an entity every frame. Cleared when the level changes.
+	// Bounded cache of reconstructed client-side entities, keyed by their NBT
+	// string, so we don't rebuild an entity every frame. Cleared on level change.
 	private static final int CACHE_MAX = 32;
 	private static final Map<String, LivingEntity> CACHE =
 			new LinkedHashMap<>(16, 0.75F, true) {
@@ -68,16 +77,13 @@ public class CapturedMobRenderer implements SpecialModelRenderer<LivingEntity> {
 	}
 
 	@Override
-	public LivingEntity extractArgument(ItemStack stack) {
+	public CompoundTag extractArgument(ItemStack stack) {
 		CustomData data = stack.get(DataComponents.CUSTOM_DATA);
 		if (data == null) {
 			return null;
 		}
 		CompoundTag root = data.copyTag();
-		if (!root.contains(ENTITY_TAG)) {
-			return null;
-		}
-		return getOrCreate(root.getCompoundOrEmpty(ENTITY_TAG));
+		return root.contains(ENTITY_TAG) ? root.getCompoundOrEmpty(ENTITY_TAG) : null;
 	}
 
 	private static LivingEntity getOrCreate(CompoundTag tag) {
@@ -102,6 +108,7 @@ public class CapturedMobRenderer implements SpecialModelRenderer<LivingEntity> {
 			Optional<Entity> created = EntityType.by(input)
 					.flatMap(type -> EntityType.create(type, input, level, EntitySpawnReason.BUCKET));
 			if (created.isPresent() && created.get() instanceof LivingEntity living) {
+				living.setId(FAKE_ID.getAndDecrement());
 				CACHE.put(key, living);
 				return living;
 			}
@@ -112,8 +119,12 @@ public class CapturedMobRenderer implements SpecialModelRenderer<LivingEntity> {
 	}
 
 	@Override
-	public void submit(LivingEntity entity, PoseStack pose, SubmitNodeCollector collector,
+	public void submit(CompoundTag tag, PoseStack pose, SubmitNodeCollector collector,
 						int light, int overlay, boolean hasFoil, int outlineColor) {
+		if (tag == null) {
+			return;
+		}
+		LivingEntity entity = getOrCreate(tag);
 		if (entity == null) {
 			return;
 		}
@@ -148,7 +159,7 @@ public class CapturedMobRenderer implements SpecialModelRenderer<LivingEntity> {
 	}
 
 	public record Unbaked(float scale, float yOffset, float rotationDegrees)
-			implements SpecialModelRenderer.Unbaked<LivingEntity> {
+			implements SpecialModelRenderer.Unbaked<CompoundTag> {
 
 		public static final MapCodec<Unbaked> MAP_CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
 				Codec.FLOAT.optionalFieldOf("scale", 0.5F).forGetter(Unbaked::scale),
@@ -157,12 +168,12 @@ public class CapturedMobRenderer implements SpecialModelRenderer<LivingEntity> {
 		).apply(i, Unbaked::new));
 
 		@Override
-		public SpecialModelRenderer<LivingEntity> bake(SpecialModelRenderer.BakingContext context) {
+		public SpecialModelRenderer<CompoundTag> bake(SpecialModelRenderer.BakingContext context) {
 			return new CapturedMobRenderer(scale, yOffset, rotationDegrees);
 		}
 
 		@Override
-		public MapCodec<? extends SpecialModelRenderer.Unbaked<LivingEntity>> type() {
+		public MapCodec<? extends SpecialModelRenderer.Unbaked<CompoundTag>> type() {
 			return MAP_CODEC;
 		}
 	}
